@@ -1,4 +1,3 @@
-import sys
 import csv
 import re
 from string import Template
@@ -13,14 +12,16 @@ class Statistics:
     def __init__(self, user_stats_table: list):
         self.user_stats = user_stats_table
 
+    @classmethod
+    def get_stats_from_csv(cls, filename):
+        with open(filename, 'r') as file:
+            reader = csv.reader(file)
+            return cls(list(reader))
+
     def save_to_file(self, filepath):
         with open(filepath, 'w') as file:
-            writer = csv.DictWriter(file, self.user_stats.pop(0))
-
+            writer = csv.writer(file)
             writer.writerows(self.user_stats)
-            # for row in self.user_stats:
-            #     print(row)
-            #     writer.writerow(row)
 
     def append(self, data):
         self.user_stats.append(data)
