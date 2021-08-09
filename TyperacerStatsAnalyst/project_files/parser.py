@@ -1,48 +1,26 @@
-import csv
 import re
 from string import Template
 
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
 
 from project_files.constants import URL
-
-
-class Statistics:
-    def __init__(self, user_stats_table: list):
-        self.user_stats = user_stats_table
-
-    @classmethod
-    def get_stats_from_csv(cls, filename):
-        with open(filename, 'r') as file:
-            reader = csv.reader(file)
-            return cls(list(reader))
-
-    def save_to_file(self, filepath):
-        with open(filepath, 'w') as file:
-            writer = csv.writer(file)
-            writer.writerows(self.user_stats)
-
-    def append(self, data):
-        self.user_stats.append(data)
-
-    def __str__(self):
-        return f'Stats: {self.user_stats[0]}'
+from project_files.statistics_analysis import Statistics
 
 
 class Parser:
     def __init__(self):
-        self.user_data = []
+        self.user_data = pd.DataFrame(columns=['race', 'speed', 'accuracy', 'points', 'place', 'date'])
 
     def parse_user_stats(self, username) -> Statistics:
-        url, next_cursor = Template(URL), ''
-
-        self.user_data.append(self._parse_table_head(url.substitute({'user': username, 'cursor': ''})))
-        counter = 0
+        url = Template(URL)
+        counter, next_cursor = 0, ''
 
         while True:
             data, next_cursor = self._parse_single_page(url.substitute({'user': username, 'cursor': next_cursor}))
-            self.user_data.extend(data)
+
+            self.user_data = self.user_data.append(data)
             counter += 1
 
             print(f'Page {counter} parsed\r', flush=True, end='')
@@ -61,19 +39,20 @@ class Parser:
 
         data = []
         for row in rows[1:]:  # 1: so we skip the first row, of th
-            data.append(tuple(element.get_text(strip=True) for element in row.find_all('td')[:-1]))  # [:-1] so we dont get the last column
+            row_stack = []
+            for element in row.find_all('td')[:-1]:
+                if ' WPM' in element.get_text(strip=True):
+                    row_stack.append(element.get_text(strip=True).replace(' WPM', ''))
+                elif '%' in element.get_text(strip=True):
+                    row_stack.append(element.get_text(strip=True).replace('%', ''))
+                else:
+                    row_stack.append(element.get_text(strip=True))
+
+            data.append(row_stack)
 
         next_cursor = self._find_next_cursor(page_soup)
 
-        return data, next_cursor
-
-    @staticmethod
-    def _parse_table_head(url):
-        page = requests.get(url)
-        rows = BeautifulSoup(page.text, 'html.parser').find('table', {'class': 'scoresTable'}).find_all('tr')
-
-        return tuple(element.get_text(strip=True) for element in rows[0].find_all('th')[:-1])  # here we use
-        # [:-1] because I dont want to have the last column "options" in my stats
+        return pd.DataFrame(data, columns=['race', 'speed', 'accuracy', 'points', 'place', 'date']), next_cursor
 
     @staticmethod
     def _find_next_cursor(page_soup):
