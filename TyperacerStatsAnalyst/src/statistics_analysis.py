@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class Statistics:
@@ -13,7 +14,15 @@ class Statistics:
         self.user_stats.to_csv(filepath, index=False)
 
     def plot_mean_wpm(self):
-        self.user_stats.plot('race', 'speed')
+        speeds = self.user_stats['speed'][::-1]
+        means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1)]
+
+        plt.plot(self.user_stats['race'][::-1], means)
+        plt.xlabel('Race')
+        plt.ylabel('WPM')
+        plt.legend(['Mean WPM'])
+        plt.grid()
+        plt.show()
 
     def append(self, data):
         self.user_stats.append(data)
