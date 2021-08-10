@@ -5,8 +5,8 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 
-from project_files.constants import URL
-from project_files.statistics_analysis import Statistics
+from src.constants import URL
+from src.statistics_analysis import Statistics
 
 
 class Parser:

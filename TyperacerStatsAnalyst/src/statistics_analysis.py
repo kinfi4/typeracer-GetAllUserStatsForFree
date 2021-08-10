@@ -14,15 +14,23 @@ class Statistics:
         self.user_stats.to_csv(filepath, index=False)
 
     def plot_mean_wpm(self):
-        speeds = self.user_stats['speed'][::-1]
+        speeds = list(map(int, self.user_stats['speed'][::-1].values))
         means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1)]
 
+        plot1 = plt.figure(1)
         plt.plot(self.user_stats['race'][::-1], means)
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Mean WPM'])
-        plt.grid()
-        plt.show()
+
+    def plot_speeds(self):
+        speeds = list(map(int, self.user_stats['speed'][::-1].values))
+
+        plot2 = plt.figure(2)
+        plt.plot(self.user_stats['race'][::-1], speeds)
+        plt.xlabel('Race')
+        plt.ylabel('WPM')
+        plt.legend(['Speed in WPM'])
 
     def append(self, data):
         self.user_stats.append(data)
