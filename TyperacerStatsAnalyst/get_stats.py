@@ -13,7 +13,7 @@ def parse(username, output_file, show_plots=True):
 
     if show_plots:
         stats.plot_mean_wpm()
-        stats.plot_speeds()
+        stats.plot_mean_tens()
 
         plt.show()
 
@@ -21,7 +21,7 @@ def parse(username, output_file, show_plots=True):
 def plot_stats_from_file(filepath):
     stats = Statistics.get_stats_from_csv(filepath)
     stats.plot_mean_wpm()
-    stats.plot_speeds()
+    stats.plot_mean_tens()
 
     plt.show()
 

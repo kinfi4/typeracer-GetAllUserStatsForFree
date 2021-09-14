@@ -32,6 +32,22 @@ class Statistics:
         plt.ylabel('WPM')
         plt.legend(['Speed in WPM'])
 
+    def plot_mean_tens(self):
+        speeds = list(map(int, self.user_stats['speed'][::-1].values))
+        means_tens = []
+
+        for idx in range(1, len(speeds) + 1):
+            if idx < 11:
+                means_tens.append(sum(speeds[:idx]) / idx)
+            else:
+                means_tens.append(sum(speeds[idx - 10:idx]) / 10)
+
+        plot3 = plt.figure(3)
+        plt.plot(self.user_stats['race'][::-1], means_tens)
+        plt.xlabel('Race')
+        plt.ylabel('WPM')
+        plt.legend(['Mean speed for last 10 races'])
+
     def append(self, data):
         self.user_stats.append(data)
 
