@@ -14,11 +14,13 @@ class Statistics:
         self.user_stats.to_csv(filepath, index=False)
 
     def plot_mean_wpm(self):
+        show_every_x_records = 10
+
         speeds = list(map(int, self.user_stats['speed'][::-1].values))
-        means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1)]
+        means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1) if i % show_every_x_records == 0]
 
         plot1 = plt.figure(1)
-        plt.plot(self.user_stats['race'][::-1], means)
+        plt.plot(list(filter(lambda idx: idx % show_every_x_records == 0, self.user_stats['race'][::-1])), means)
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Mean WPM'])
@@ -33,17 +35,21 @@ class Statistics:
         plt.legend(['Speed in WPM'])
 
     def plot_mean_tens(self):
+        show_every_x_records = 40
+
         speeds = list(map(int, self.user_stats['speed'][::-1].values))
-        means_tens = []
+        means_tens, race_indexes = [], []
 
         for idx in range(1, len(speeds) + 1):
             if idx < 11:
+                race_indexes.append(idx)
                 means_tens.append(sum(speeds[:idx]) / idx)
-            else:
+            elif idx % show_every_x_records  == 0:
+                race_indexes.append(idx)
                 means_tens.append(sum(speeds[idx - 10:idx]) / 10)
 
         plot3 = plt.figure(3)
-        plt.plot(self.user_stats['race'][::-1], means_tens)
+        plt.plot(race_indexes, means_tens)
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Mean speed for last 10 races'])
