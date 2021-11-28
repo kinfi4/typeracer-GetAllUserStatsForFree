@@ -20,7 +20,7 @@ class Statistics:
         means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1) if i % show_every_x_records == 0]
 
         plot1 = plt.figure(1)
-        plt.plot(list(filter(lambda idx: idx % show_every_x_records == 0, self.user_stats['race'][::-1])), means)
+        plt.plot(list(filter(lambda idx: int(idx) % show_every_x_records == 0, self.user_stats['race'][::-1].values)), means)
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Mean WPM'])
