@@ -10,7 +10,7 @@ Script can also plot some general information for you, if you wanna something un
 ## How to use?
         
         git clone https://github.com/kinfi4/typeracer-GetAllUserStatsForFree.git
-        cd TyperacerStatsAnalyst
+        cd TyperacerStatsAnalyst/TyperacerStatsAnalyst
         pip install -r requirements.txt (you may also create isolated virtual env for that)
         python get_stats.py -u <your username>
 
