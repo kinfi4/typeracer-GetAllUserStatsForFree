@@ -3,7 +3,7 @@ from string import Template
 
 import requests
 import pandas as pd
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 from src.constants import URL
 from src.statistics_analysis import Statistics
@@ -11,7 +11,8 @@ from src.statistics_analysis import Statistics
 
 class Parser:
     def __init__(self):
-        self.user_data = pd.DataFrame(columns=['race', 'speed', 'accuracy', 'points', 'place', 'date'])
+        self.list_of_columns = ['race', 'speed', 'accuracy', 'points', 'place', 'date']
+        self.user_data = pd.DataFrame(columns=self.list_of_columns)
         self.percentage = 0.00
 
     def parse_user_stats(self, username) -> Statistics:
@@ -40,42 +41,42 @@ class Parser:
     def _parse_single_page(self, url):
         page = requests.get(url)
         page_soup = BeautifulSoup(page.text, 'html.parser')
-        stats_table = page_soup.find('table', {'class': 'scoresTable'})
-
-        rows = stats_table.find_all('tr')
+        data_rows = page_soup.find_all('div', {'class': 'Scores__Table__Row'})
 
         data = []
-        for row in rows[1:]:  # 1: so we skip the first row, of th
-            row_stack = []
-            for element in row.find_all('td')[:-1]:
-                if ' WPM' in element.get_text(strip=True):
-                    row_stack.append(element.get_text(strip=True).replace(' WPM', ''))
-                elif '%' in element.get_text(strip=True):
-                    row_stack.append(element.get_text(strip=True).replace('%', ''))
-                else:
-                    row_stack.append(element.get_text(strip=True))
-
-            data.append(row_stack)
+        for row in data_rows:
+            data.append(
+                [
+                    row.find('div', {'class': 'profileTableHeaderUniverse'}).find('a').get_text(strip=True),  # race number
+                    row.find('div', {'class': 'profileTableHeaderRaces'}).get_text(strip=True).replace(' WPM', ''),  # WPM column
+                    row.find('div', {'class': 'profileTableHeaderRaces'}).get_text(strip=True).replace('%', ''),  # accuracy
+                    row.find('div', {'class': 'profileTableHeaderAvg'}).get_text(strip=True),  # points
+                    row.find('div', {'class': 'profileTableHeaderPoints'}).get_text(strip=True),  # place
+                    row.find('div', {'class': 'profileTableHeaderDate'}).get_text(strip=True),  # date
+                ]
+            )
 
         next_cursor = self._find_next_cursor(page_soup)
 
-        return pd.DataFrame(data, columns=['race', 'speed', 'accuracy', 'points', 'place', 'date']), next_cursor
+        return pd.DataFrame(data, columns=self.list_of_columns), next_cursor
 
-    def _get_number_of_races(self, url):
+    @staticmethod
+    def _get_number_of_races(url):
         page = requests.get(url)
         page_soup = BeautifulSoup(page.text, 'html.parser')
-        stats_table = page_soup.find('table', {'class': 'scoresTable'})
 
-        for row in stats_table.find_all('tr')[1:]:
-            race_number_tag: Tag = row.find_all('td')[0]
-            return int(race_number_tag.find('a').text)
+        first_row = page_soup.find('div', {'class': 'Scores__Table__Row'})
+        race_number_tag = first_row.find('div', {'class': 'profileTableHeaderUniverse'})
+
+        return int(race_number_tag.find('a').text)
 
     @staticmethod
     def _find_next_cursor(page_soup):
-        links = page_soup.find('table', {'class': 'scoresTable'}).findNextSibling('div').find_all('a')
+        last_row = page_soup.find_all('div', {'class': 'Scores__Table__Row'})[-1]
+        link_tags = last_row.find_next_sibling('div').find_all('a')
 
         next_link = None
-        for link in links:
+        for link in link_tags:
             if 'load older' in link.string:
                 next_link = link
 
