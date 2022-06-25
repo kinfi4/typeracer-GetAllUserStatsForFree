@@ -1,7 +1,5 @@
 import argparse
 
-import matplotlib.pyplot as plt
-
 from src.parser import Parser
 from src.statistics_analysis import StatisticsVisualizer
 
