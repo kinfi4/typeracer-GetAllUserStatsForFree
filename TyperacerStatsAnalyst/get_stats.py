@@ -12,20 +12,13 @@ def parse(username, output_file, show_plots=True):
     stats.save_to_file(output_file)
 
     if show_plots:
-        stats.plot_mean_wpm()
-        stats.plot_mean_tens()
-
-        plt.show()
+        stats.plot_everything()
 
 
 def plot_stats_from_file(filepath: str):
     stats = StatisticsVisualizer.get_stats_from_csv(filepath)
-    # stats.plot_mean_wpm()
-    # stats.plot_mean_tens()
-    # stats.plot_speeds()
-    stats.plot_places()
 
-    plt.show()
+    stats.plot_everything()
 
 
 if __name__ == '__main__':

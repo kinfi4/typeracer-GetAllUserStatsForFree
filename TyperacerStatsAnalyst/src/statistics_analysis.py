@@ -1,3 +1,5 @@
+from datetime import date
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -12,6 +14,15 @@ class StatisticsVisualizer:
 
     def save_to_file(self, filepath: str):
         self.user_stats_df.to_csv(filepath, index=False)
+
+    def plot_everything(self):
+        self.plot_activity_by_date_distribution()
+        self.plot_places()
+        self.plot_speeds()
+        self.plot_mean_wpm()
+        self.plot_mean_tens()
+
+        plt.show()
 
     def plot_mean_wpm(self):
         show_every_x_records = 10
@@ -63,7 +74,19 @@ class StatisticsVisualizer:
         _ = plt.figure(4)
         plt.bar(places_took.index, places_took.values, color='green')
         plt.xlabel('Place took in race')
-        plt.ylabel('Count')
+        plt.ylabel('Number of races')
+
+    def plot_activity_by_date_distribution(self):
+        df_dates_transformed = pd.to_datetime(self.user_stats_df['date'])
+        df_dates_transformed = df_dates_transformed.dt.to_period('M')
+        dates_with_races_number = df_dates_transformed.value_counts().sort_index()
+
+        dates_with_races_number.index = pd.to_datetime(dates_with_races_number.index.to_timestamp())
+
+        _ = plt.figure(5)
+        plt.plot(dates_with_races_number.index, dates_with_races_number.values, color='green')
+        plt.xlabel('Date')
+        plt.ylabel('Number of races')
 
     def append(self, data):
         self.user_stats_df.append(data)

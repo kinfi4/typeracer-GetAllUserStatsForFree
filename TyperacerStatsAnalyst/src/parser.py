@@ -1,5 +1,7 @@
 import re
 from string import Template
+from datetime import date
+from dateutil.parser import parse
 
 import requests
 import pandas as pd
@@ -36,6 +38,7 @@ class Parser:
             if not next_cursor:  # we have reached the last table
                 break
 
+        self.user_data['date'] = self.user_data['date'].apply(self._parse_date)
         return StatisticsVisualizer(self.user_data)
 
     def _parse_single_page(self, url):
@@ -88,3 +91,10 @@ class Parser:
 
     def _print_progress(self):
         print(f'[Parser]: {self.percentage}% parsed\r', flush=True, end='')
+
+    @staticmethod
+    def _parse_date(date_str: str) -> date:
+        if date_str == 'today':
+            return date.today()
+
+        return parse(date_str).date()
