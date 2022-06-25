@@ -6,7 +6,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from src.constants import URL
-from src.statistics_analysis import Statistics
+from src.statistics_analysis import StatisticsVisualizer
 
 
 class Parser:
@@ -15,8 +15,8 @@ class Parser:
         self.user_data = pd.DataFrame(columns=self.list_of_columns)
         self.percentage = 0.00
 
-    def parse_user_stats(self, username) -> Statistics:
-        self.print_progress()
+    def parse_user_stats(self, username: str) -> StatisticsVisualizer:
+        self._print_progress()
 
         url = Template(URL)
         counter, next_cursor = 0, ''
@@ -31,12 +31,12 @@ class Parser:
 
             self.percentage = round((counter * 100 / number_of_races) * 100, 2)
             self.percentage = self.percentage if self.percentage < 100.00 else 100.00
-            self.print_progress()
+            self._print_progress()
 
             if not next_cursor:  # we have reached the last table
                 break
 
-        return Statistics(self.user_data)
+        return StatisticsVisualizer(self.user_data)
 
     def _parse_single_page(self, url):
         page = requests.get(url)
@@ -86,5 +86,5 @@ class Parser:
         href = next_link.attrs.get('href')
         return re.search(r'cursor=(.*?)&', href).groups()[0]
 
-    def print_progress(self):
+    def _print_progress(self):
         print(f'[Parser]: {self.percentage}% parsed\r', flush=True, end='')

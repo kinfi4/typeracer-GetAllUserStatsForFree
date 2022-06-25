@@ -3,7 +3,7 @@ import argparse
 import matplotlib.pyplot as plt
 
 from src.parser import Parser
-from src.statistics_analysis import Statistics
+from src.statistics_analysis import StatisticsVisualizer
 
 
 def parse(username, output_file, show_plots=True):
@@ -18,10 +18,12 @@ def parse(username, output_file, show_plots=True):
         plt.show()
 
 
-def plot_stats_from_file(filepath):
-    stats = Statistics.get_stats_from_csv(filepath)
-    stats.plot_mean_wpm()
-    stats.plot_mean_tens()
+def plot_stats_from_file(filepath: str):
+    stats = StatisticsVisualizer.get_stats_from_csv(filepath)
+    # stats.plot_mean_wpm()
+    # stats.plot_mean_tens()
+    # stats.plot_speeds()
+    stats.plot_places()
 
     plt.show()
 
