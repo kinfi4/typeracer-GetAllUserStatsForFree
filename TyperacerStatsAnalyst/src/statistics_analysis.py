@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -28,7 +29,7 @@ class StatisticsVisualizer:
         speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
         means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1) if i % show_every_x_records == 0]
 
-        _ = plt.figure(1)
+        _ = plt.figure('Mean speed plot')
         plt.plot(list(filter(lambda idx: int(idx) % show_every_x_records == 0, self.user_stats_df['race'][::-1].values)), means)
         plt.xlabel('Race')
         plt.ylabel('WPM')
@@ -38,7 +39,7 @@ class StatisticsVisualizer:
         speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
         max_speed, min_speed = max(speeds), min(speeds)
 
-        _ = plt.figure(2)
+        _ = plt.figure('Speeds plot')
         plt.scatter(self.user_stats_df['race'][::-1], speeds, s=0.3, c='red')
         plt.xlabel('Race')
         plt.ylabel('WPM')
@@ -59,7 +60,7 @@ class StatisticsVisualizer:
                 race_indexes.append(idx)
                 means_tens.append(sum(speeds[idx - 10:idx]) / 10)
 
-        _ = plt.figure(3)
+        _ = plt.figure('Mean tens plot')
         plt.plot(race_indexes, means_tens)
         plt.xlabel('Race')
         plt.ylabel('WPM')
@@ -69,20 +70,18 @@ class StatisticsVisualizer:
         places_took = self.user_stats_df[self.user_stats_df['place'].str.contains('/5')]
         places_took = places_took['place'].value_counts().sort_index(key=lambda x: x.str[0].astype(int))
 
-        _ = plt.figure(4)
+        _ = plt.figure('Places took bar')
         plt.bar(places_took.index, places_took.values, color='green')
         plt.xlabel('Place took in race')
         plt.ylabel('Number of races')
 
     def plot_activity_by_date_distribution(self):
         df_dates_transformed = pd.to_datetime(self.user_stats_df['date'])
-        df_dates_transformed = df_dates_transformed.dt.to_period('M')
-        dates_with_races_number = df_dates_transformed.value_counts().sort_index()
+        first_date, last_date = df_dates_transformed.min(), df_dates_transformed.max()
+        diff = last_date - first_date
 
-        dates_with_races_number.index = pd.to_datetime(dates_with_races_number.index.to_timestamp())
-
-        _ = plt.figure(5)
-        plt.plot(dates_with_races_number.index, dates_with_races_number.values, color='green')
+        _ = plt.figure('Activity histogram')
+        plt.hist(df_dates_transformed, bins=diff.days)
         plt.xlabel('Date')
         plt.ylabel('Number of races')
 

@@ -38,6 +38,9 @@ class Parser:
             if not next_cursor:  # we have reached the last table
                 break
 
+            if counter == 3:
+                break
+
         self.user_data['date'] = self.user_data['date'].apply(self._parse_date)
         return StatisticsVisualizer(self.user_data)
 
