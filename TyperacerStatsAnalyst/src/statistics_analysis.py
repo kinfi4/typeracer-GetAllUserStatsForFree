@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -15,6 +14,10 @@ class StatisticsVisualizer:
         self.user_stats_df.to_csv(filepath, index=False)
 
     def plot_everything(self):
+        if self.user_stats_df.shape[0] == 0:
+            print('Sorry but there are no data to parse')
+            return
+
         self.plot_activity_by_date_distribution()
         self.plot_places()
         self.plot_speeds()
@@ -27,10 +30,20 @@ class StatisticsVisualizer:
         show_every_x_records = 10
 
         speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
-        means = [sum(speeds[:i]) / i for i in range(1, len(speeds) + 1) if i % show_every_x_records == 0]
+        means = [sum(speeds[i:i + 10]) / 10 for i in range(0, len(speeds), 10)]
+
+        races_to_show = list(
+            filter(
+                lambda idx: int(idx) % show_every_x_records == 0,
+                self.user_stats_df['race'][::-1].values
+            )
+        )
+
+        truncated_to_same_size = list(zip(races_to_show, means))
+        races_to_show, means = zip(*truncated_to_same_size)
 
         _ = plt.figure('Mean speed plot')
-        plt.plot(list(filter(lambda idx: int(idx) % show_every_x_records == 0, self.user_stats_df['race'][::-1].values)), means)
+        plt.plot(races_to_show, means)
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Mean WPM'])
@@ -81,12 +94,9 @@ class StatisticsVisualizer:
         diff = last_date - first_date
 
         _ = plt.figure('Activity histogram')
-        plt.hist(df_dates_transformed, bins=diff.days)
+        plt.hist(df_dates_transformed, bins=diff.days if diff.days else 1)
         plt.xlabel('Date')
         plt.ylabel('Number of races')
 
     def append(self, data):
         self.user_stats_df.append(data)
-
-    def __str__(self):
-        return f'Stats: {self.user_stats_df[0]}'

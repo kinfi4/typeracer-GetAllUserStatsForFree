@@ -1,6 +1,7 @@
 import re
-from string import Template
 from datetime import date
+from typing import Optional, Tuple
+from string import Template
 from dateutil.parser import parse
 
 import requests
@@ -12,14 +13,15 @@ from src.statistics_analysis import StatisticsVisualizer
 
 
 class Parser:
-    def __init__(self):
-        self.list_of_columns = ['race', 'speed', 'accuracy', 'points', 'place', 'date']
-        self.user_data = pd.DataFrame(columns=self.list_of_columns)
-        self.percentage = 0.00
+    def __init__(self, start_date: Optional[date], end_date: Optional[date]):
+        self._list_of_columns = ['race', 'speed', 'accuracy', 'points', 'place', 'date']
+        self._user_data: pd.DataFrame = pd.DataFrame(columns=self._list_of_columns)
+        self._percentage = 0.00
+
+        self._start_date = start_date
+        self._end_date = end_date
 
     def parse_user_stats(self, username: str) -> StatisticsVisualizer:
-        self._print_progress()
-
         url = Template(URL)
         counter, next_cursor = 0, ''
 
@@ -28,29 +30,31 @@ class Parser:
         while True:
             data, next_cursor = self._parse_single_page(url.substitute({'user': username, 'cursor': next_cursor}))
 
-            self.user_data = self.user_data.append(data)
+            self._user_data = self._user_data.append(data)
             counter += 1
 
-            self.percentage = round((counter * 100 / number_of_races) * 100, 2)
-            self.percentage = self.percentage if self.percentage < 100.00 else 100.00
-            self._print_progress()
+            self._print_progress(counter, number_of_races)
+
+            if self._start_date and self._user_data['date'].min() < self._start_date:  # we already parsed everything we needed
+                break
 
             if not next_cursor:  # we have reached the last table
                 break
 
-            if counter == 3:
-                break
+        self._user_data = self._filter_out_races_by_dates(self._user_data)
 
-        self.user_data['date'] = self.user_data['date'].apply(self._parse_date)
-        return StatisticsVisualizer(self.user_data)
+        return StatisticsVisualizer(self._user_data)
 
-    def _parse_single_page(self, url):
+    def _parse_single_page(self, url: str) -> Tuple[pd.DataFrame, str]:
         page = requests.get(url)
         page_soup = BeautifulSoup(page.text, 'html.parser')
         data_rows = page_soup.find_all('div', {'class': 'Scores__Table__Row'})
 
         data = []
         for row in data_rows:
+            date_str = row.find('div', {'class': 'profileTableHeaderDate'}).get_text(strip=True)  # date
+            date_obj = self._parse_date(date_str)
+
             data.append(
                 [
                     row.find('div', {'class': 'profileTableHeaderUniverse'}).find('a').get_text(strip=True),  # race number
@@ -58,16 +62,31 @@ class Parser:
                     row.find('div', {'class': 'profileTableHeaderRaces'}).get_text(strip=True).replace('%', ''),  # accuracy
                     row.find('div', {'class': 'profileTableHeaderAvg'}).get_text(strip=True),  # points
                     row.find('div', {'class': 'profileTableHeaderPoints'}).get_text(strip=True),  # place
-                    row.find('div', {'class': 'profileTableHeaderDate'}).get_text(strip=True),  # date
+                    date_obj,  # date
                 ]
             )
 
         next_cursor = self._find_next_cursor(page_soup)
 
-        return pd.DataFrame(data, columns=self.list_of_columns), next_cursor
+        return pd.DataFrame(data, columns=self._list_of_columns), next_cursor
+
+    def _print_progress(self, number_of_parsed_pages: int, total_number_of_races: int):
+        self._percentage = round((number_of_parsed_pages * 100 / total_number_of_races) * 100, 2)
+        self._percentage = self._percentage if self._percentage < 100.00 else 100.00
+
+        print(f'[Parser]: {self._percentage}% of all your races parsed\r', flush=True, end='')
+
+    def _filter_out_races_by_dates(self, races_data: pd.DataFrame) -> pd.DataFrame:
+        if self._start_date:
+            races_data = races_data[races_data['date'] > self._start_date]
+
+        if self._end_date:
+            races_data = races_data[races_data['date'] <= self._end_date]
+
+        return races_data
 
     @staticmethod
-    def _get_number_of_races(url):
+    def _get_number_of_races(url: str):
         page = requests.get(url)
         page_soup = BeautifulSoup(page.text, 'html.parser')
 
@@ -77,7 +96,7 @@ class Parser:
         return int(race_number_tag.find('a').text)
 
     @staticmethod
-    def _find_next_cursor(page_soup):
+    def _find_next_cursor(page_soup) -> str:
         last_row = page_soup.find_all('div', {'class': 'Scores__Table__Row'})[-1]
         link_tags = last_row.find_next_sibling('div').find_all('a')
 
@@ -91,9 +110,6 @@ class Parser:
 
         href = next_link.attrs.get('href')
         return re.search(r'cursor=(.*?)&', href).groups()[0]
-
-    def _print_progress(self):
-        print(f'[Parser]: {self.percentage}% parsed\r', flush=True, end='')
 
     @staticmethod
     def _parse_date(date_str: str) -> date:
