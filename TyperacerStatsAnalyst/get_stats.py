@@ -22,8 +22,7 @@ def parse(
 
 
 def plot_stats_from_file(filepath: str, start_date: Optional[date] = None, end_date: Optional[date] = None):
-    # TODO: write filtering by date, for data from file
-    stats = StatisticsVisualizer.get_stats_from_csv(filepath)
+    stats = StatisticsVisualizer.get_stats_from_csv(filepath, start_date, end_date)
 
     stats.plot_everything()
 
@@ -51,7 +50,7 @@ if __name__ == '__main__':
             print('You have to specify the filepath from which I have to get statistics')
             exit(code=1)
 
-        plot_stats_from_file(args.filename)
+        plot_stats_from_file(args.filename, start_date_arg, end_date_arg)
     else:
         if not args.username:
             print('You have to specify the username of the account you wanna parse info about')

@@ -1,14 +1,25 @@
+from datetime import date
+from typing import Optional
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
 class StatisticsVisualizer:
-    def __init__(self, user_stats_table: pd.DataFrame):
-        self.user_stats_df = user_stats_table
+    def __init__(
+        self,
+        user_stats_table: pd.DataFrame,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> None:
+        self._start_date = start_date
+        self._end_date = end_date
+        
+        self.user_stats_df = self._filter_data_by_date(user_stats_table)
 
     @classmethod
-    def get_stats_from_csv(cls, filename: str):
-        return cls(pd.read_csv(filename))
+    def get_stats_from_csv(cls, filename: str, start_date: date, end_date: date):
+        return cls(pd.read_csv(filename), start_date, end_date)
 
     def save_to_file(self, filepath: str):
         self.user_stats_df.to_csv(filepath, index=False)
@@ -98,5 +109,13 @@ class StatisticsVisualizer:
         plt.xlabel('Date')
         plt.ylabel('Number of races')
 
-    def append(self, data):
-        self.user_stats_df.append(data)
+    def _filter_data_by_date(self, data: pd.DataFrame) -> pd.DataFrame:
+        data['date'] = pd.to_datetime(data['date']).dt.date
+
+        if self._start_date:
+            data = data[data['date'] > self._start_date]
+
+        if self._end_date:
+            data = data[data['date'] <= self._end_date]
+
+        return data
