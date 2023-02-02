@@ -1,14 +1,16 @@
 import re
 from datetime import date
-from typing import Optional, Tuple
 from string import Template
-from dateutil.parser import parse
+from typing import Optional, Tuple
 
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+from dateutil.parser import parse
 
 from src.constants import URL
+from src.retry_decorator import retry
+from src.exceptions import ServerTooManyRequestsError
 from src.statistics_analysis import StatisticsVisualizer
 
 
@@ -46,8 +48,13 @@ class Parser:
         return StatisticsVisualizer(self._user_data)
 
     def _parse_single_page(self, url: str) -> Tuple[pd.DataFrame, str]:
-        page = requests.get(url)
-        page_soup = BeautifulSoup(page.text, 'html.parser')
+        page_text_loader = retry(
+            max_retries=3,
+            context=f"Retrying to load the page with stats, because internet issue"
+        )(self._load_page_text)
+
+        page_text = page_text_loader(url)
+        page_soup = BeautifulSoup(page_text, 'html.parser')
         data_rows = page_soup.find_all('div', {'class': 'Scores__Table__Row'})
 
         data = []
@@ -117,3 +124,15 @@ class Parser:
             return date.today()
 
         return parse(date_str).date()
+
+    @staticmethod
+    def _load_page_text(url: str) -> str:
+        response = requests.get(url)
+
+        if response.status_code == 429:
+            raise ServerTooManyRequestsError(f"Couldn't load the page.")
+
+        if not response.ok:
+            raise RuntimeError("Something went wrong during page loading...")
+
+        return response.text

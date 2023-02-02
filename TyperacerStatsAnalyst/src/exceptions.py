@@ -1,0 +1,2 @@
+class ServerTooManyRequestsError(Exception):
+    pass
