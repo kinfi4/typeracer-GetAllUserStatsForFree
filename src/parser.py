@@ -32,7 +32,7 @@ class Parser:
         while True:
             data, next_cursor = self._parse_single_page(url.substitute({'user': username, 'cursor': next_cursor}))
 
-            self._user_data = self._user_data.append(data)
+            self._user_data = pd.concat([self._user_data, data], ignore_index=True)
             counter += 1
 
             self._print_progress(counter, number_of_races)
@@ -65,8 +65,8 @@ class Parser:
             data.append(
                 [
                     row.find('div', {'class': 'profileTableHeaderUniverse'}).find('a').get_text(strip=True),  # race number
-                    row.find('div', {'class': 'profileTableHeaderRaces'}).get_text(strip=True).replace(' WPM', ''),  # WPM column
-                    row.find('div', {'class': 'profileTableHeaderRaces'}).get_text(strip=True).replace('%', ''),  # accuracy
+                    row.find_all('div', {'class': 'profileTableHeaderRaces'})[1].get_text(strip=True).replace(' WPM', ''),  # WPM
+                    row.find_all('div', {'class': 'profileTableHeaderRaces'})[2].get_text(strip=True).replace('%', ''),  # accuracy
                     row.find('div', {'class': 'profileTableHeaderAvg'}).get_text(strip=True),  # points
                     row.find('div', {'class': 'profileTableHeaderPoints'}).get_text(strip=True),  # place
                     date_obj,  # date
@@ -104,19 +104,13 @@ class Parser:
 
     @staticmethod
     def _find_next_cursor(page_soup) -> str:
-        last_row = page_soup.find_all('div', {'class': 'Scores__Table__Row'})[-1]
-        link_tags = last_row.find_next_sibling('div').find_all('a')
-
-        next_link = None
-        for link in link_tags:
-            if 'load older' in link.string:
-                next_link = link
-
-        if next_link is None:  # This means that we've reached the last table
-            return ''
-
-        href = next_link.attrs.get('href')
-        return re.search(r'cursor=(.*?)&', href).groups()[0]
+        for link in page_soup.find_all('a'):
+            if link.string and 'load older' in link.string:
+                href = link.attrs.get('href', '')
+                match = re.search(r'cursor=([^&]+)', href)
+                if match:
+                    return match.group(1)
+        return ''
 
     @staticmethod
     def _parse_date(date_str: str) -> date:

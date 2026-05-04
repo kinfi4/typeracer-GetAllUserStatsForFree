@@ -1,3 +1,4 @@
+import os
 from datetime import date
 from typing import Optional
 
@@ -22,6 +23,9 @@ class StatisticsVisualizer:
         return cls(pd.read_csv(filename), start_date, end_date)
 
     def save_to_file(self, filepath: str):
+        dir_name = os.path.dirname(filepath)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
         self.user_stats_df.to_csv(filepath, index=False)
 
     def plot_everything(self):
@@ -111,6 +115,9 @@ class StatisticsVisualizer:
 
     def _filter_data_by_date(self, data: pd.DataFrame) -> pd.DataFrame:
         data['date'] = pd.to_datetime(data['date']).dt.date
+        data['speed'] = pd.to_numeric(data['speed'], errors='coerce')
+        data = data.dropna(subset=['speed'])
+        data['speed'] = data['speed'].astype(int)
 
         if self._start_date:
             data = data[data['date'] > self._start_date]

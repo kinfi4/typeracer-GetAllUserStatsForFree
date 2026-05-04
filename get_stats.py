@@ -33,7 +33,7 @@ if __name__ == '__main__':
             print('You have to specify the username of the account you wanna parse info about')
             exit(code=1)
 
-        filename = args.filename if args.filename else f'{args.username}-stats.csv'
+        filename = args.filename if args.filename else f'data/{args.username}-stats.csv'
 
         parse(
             username=args.username,
