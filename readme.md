@@ -17,6 +17,19 @@ Script can also plot some general information for you, if you wanna something un
 ### And thats it!
 
 ---------------------------
+## Authentication (optional)
+
+By default the script fetches public race data without logging in.
+To access a private profile or authenticate as yourself:
+
+1. Copy `.env.example` to `.env`
+2. Fill in your TypeRacer username and password
+3. Run the script as normal — it will log in automatically
+
+        cp .env.example .env
+        # edit .env and set TYPERACER_USERNAME and TYPERACER_PASSWORD
+
+---------------------------
 ## Script arguments:
         * -u (--username) - Username of the account to parse info about
         * -f (--filename) - Filepath where to store the parsed info
