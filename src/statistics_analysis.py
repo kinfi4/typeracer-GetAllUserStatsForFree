@@ -44,13 +44,13 @@ class StatisticsVisualizer:
     def plot_mean_wpm(self):
         show_every_x_records = 10
 
-        speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
+        speeds = list(map(int, self.user_stats_df['speed'].values))
         means = [sum(speeds[i:i + 10]) / 10 for i in range(0, len(speeds), 10)]
 
         races_to_show = list(
             filter(
                 lambda idx: int(idx) % show_every_x_records == 0,
-                self.user_stats_df['race'][::-1].values
+                self.user_stats_df['race'].values
             )
         )
 
@@ -64,11 +64,11 @@ class StatisticsVisualizer:
         plt.legend(['Mean WPM'])
 
     def plot_speeds(self):
-        speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
+        speeds = list(map(int, self.user_stats_df['speed'].values))
         max_speed, min_speed = max(speeds), min(speeds)
 
         _ = plt.figure('Speeds plot')
-        plt.scatter(self.user_stats_df['race'][::-1], speeds, s=0.3, c='red')
+        plt.scatter(self.user_stats_df['race'], speeds, s=0.3, c='red')
         plt.xlabel('Race')
         plt.ylabel('WPM')
         plt.legend(['Speed in WPM'])
@@ -77,7 +77,7 @@ class StatisticsVisualizer:
     def plot_mean_tens(self):
         show_every_x_records = 20
 
-        speeds = list(map(int, self.user_stats_df['speed'][::-1].values))
+        speeds = list(map(int, self.user_stats_df['speed'].values))
         means_tens, race_indexes = [], []
 
         for idx in range(1, len(speeds) + 1):
@@ -115,6 +115,7 @@ class StatisticsVisualizer:
 
     def _filter_data_by_date(self, data: pd.DataFrame) -> pd.DataFrame:
         data['date'] = pd.to_datetime(data['date']).dt.date
+        data['race'] = pd.to_numeric(data['race'], errors='coerce')
         data['speed'] = pd.to_numeric(data['speed'], errors='coerce')
         data = data.dropna(subset=['speed'])
         data['speed'] = data['speed'].astype(int)
@@ -125,4 +126,4 @@ class StatisticsVisualizer:
         if self._end_date:
             data = data[data['date'] <= self._end_date]
 
-        return data
+        return data.sort_values('race').reset_index(drop=True)
