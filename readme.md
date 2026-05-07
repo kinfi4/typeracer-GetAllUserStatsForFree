@@ -50,13 +50,13 @@ The dashboard opens at `http://localhost:8501` and includes:
 
 | Tab | Contents |
 |-----|----------|
-| 📊 Overview | KPI cards (races, avg/max/median WPM, win rate, accuracy), 90-day sparkline |
-| 🚀 Speed | WPM scatter + rolling avg, histogram, PB progression, monthly box plot, trend regression |
-| 📅 Activity | Calendar heatmap, day-of-week bar, monthly volume, hour-of-day polar, hour×day heatmap |
-| 🏆 Performance | Win/podium rate over time, placement distribution, accuracy vs WPM, cumulative points |
-| 💎 Records | Top-10 tables, WPM milestones, mode breakdown, most-raced texts |
-| 🎬 Animations | Animated monthly WPM distribution histogram |
-| 🔍 Explorer | Filterable data table + CSV download |
+| Overview | KPI cards (races, avg/max/median WPM, win rate, accuracy), 90-day sparkline |
+| Speed | WPM scatter + rolling avg, histogram, PB progression, monthly box plot, trend regression |
+| Activity | Calendar heatmap, day-of-week bar, monthly volume, hour-of-day polar, hour×day heatmap |
+| Performance | Win/podium rate over time, placement distribution, accuracy vs WPM, cumulative points |
+| Records | Top-10 tables, WPM milestones, mode breakdown, most-raced texts |
+| Animations | Animated monthly WPM distribution histogram |
+| Explorer | Filterable data table + CSV download |
 
 The sidebar offers date presets (7d / 30d / 90d / YTD / 1y / all / custom), WPM range, accuracy range, race-size multi-select, and mode filter. All charts update live as you adjust filters.
 

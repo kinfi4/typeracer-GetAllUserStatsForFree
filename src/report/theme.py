@@ -146,8 +146,8 @@ CSS = f"""
         opacity: 0.45;
     }}
     .section-header {{
-        margin: 18px 0 10px 0;
-        padding-bottom: 8px;
+        margin: 18px 0 2px 0;
+        padding-bottom: 6px;
         border-bottom: 1px solid {COLORS['border']};
     }}
     .section-header h3 {{

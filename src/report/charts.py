@@ -3,7 +3,6 @@ import calendar
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
 
 from src.report.theme import COLORS, HEATMAP_SCALE, SEQUENCE
 
@@ -29,16 +28,16 @@ def wpm_over_time(df: pd.DataFrame, rolling_window: int = 50) -> go.Figure:
         hovertemplate='Race %{x}<br>%{y:.1f} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title='WPM over time',
         xaxis_title='Race #', yaxis_title='WPM',
         height=420,
+        margin=dict(t=10),
+        legend=dict(yanchor='top', y=0.99, xanchor='left', x=0.01),
     )
     return fig
 
 
 def wpm_histogram(df: pd.DataFrame) -> go.Figure:
     speeds = df['speed']
-    p25, p50, p75, p95 = np.percentile(speeds, [25, 50, 75, 95])
     fig = go.Figure()
     fig.add_trace(go.Histogram(
         x=speeds,
@@ -46,18 +45,11 @@ def wpm_histogram(df: pd.DataFrame) -> go.Figure:
         nbinsx=60,
         name='Races',
     ))
-    for label, x, color in [('p25', p25, COLORS['muted']), ('median', p50, COLORS['accent']),
-                             ('p75', p75, COLORS['muted']), ('p95', p95, COLORS['gold'])]:
-        fig.add_vline(
-            x=x, line=dict(color=color, dash='dash', width=1.5),
-            annotation_text=f'{label}: {x:.0f}', annotation_position='top',
-            annotation=dict(font=dict(color=color, size=11)),
-        )
     fig.update_layout(
-        title='WPM distribution',
         xaxis_title='WPM', yaxis_title='Races',
         height=380,
         showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
@@ -74,26 +66,28 @@ def wpm_pb_progression(df: pd.DataFrame) -> go.Figure:
         hovertemplate='Race %{x}<br>PB %{y} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title='Personal best progression',
         xaxis_title='Race #', yaxis_title='Best WPM so far',
         height=380, showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
 
 def wpm_box_by_month(df: pd.DataFrame) -> go.Figure:
     work = df.copy()
-    work['month'] = pd.to_datetime(work['date']).dt.to_period('M').dt.to_timestamp()
-    fig = px.box(
-        work, x='month', y='speed', points=False,
-        color_discrete_sequence=[COLORS['primary']],
-    )
-    fig.update_traces(marker=dict(color=COLORS['primary']),
-                      line=dict(color=COLORS['primary']))
+    work['month'] = pd.to_datetime(work['date']).dt.to_period('M').dt.strftime('%Y-%m')
+    fig = go.Figure(go.Box(
+        x=work['month'],
+        y=work['speed'],
+        marker_color=COLORS['primary'],
+        line_color=COLORS['primary'],
+        showlegend=False,
+        boxpoints=False,
+    ))
     fig.update_layout(
-        title='WPM distribution by month',
         xaxis_title='Month', yaxis_title='WPM',
         height=400, showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
@@ -124,9 +118,10 @@ def wpm_trend_regression(df: pd.DataFrame) -> go.Figure:
         name=f'Trend: +{wpm_per_month:.2f} WPM/month',
     ))
     fig.update_layout(
-        title=f'Speed trend — improving by {wpm_per_month:+.2f} WPM/month',
         xaxis_title='Race #', yaxis_title='WPM',
         height=400,
+        margin=dict(t=10),
+        legend=dict(yanchor='top', y=0.99, xanchor='left', x=0.01),
     )
     return fig
 
@@ -151,7 +146,7 @@ def wpm_distribution_animated(df: pd.DataFrame) -> go.Figure:
                 y=counts,
                 marker=dict(color=COLORS['primary'], line=dict(color=COLORS['border'], width=0.5)),
             )],
-            layout=go.Layout(title=f'WPM distribution — {m} ({len(subset)} races)'),
+            layout=go.Layout(title=f'{m} ({len(subset)} races)'),
         ))
 
     initial = work[work['month'] == months[0]]['speed']
@@ -166,12 +161,13 @@ def wpm_distribution_animated(df: pd.DataFrame) -> go.Figure:
         frames=frames,
     )
     fig.update_layout(
-        title=f'WPM distribution — {months[0]} ({len(initial)} races)',
+        title=f'{months[0]} ({len(initial)} races)',
         xaxis_title='WPM', yaxis_title='Races',
         height=460,
         updatemenus=[dict(
             type='buttons',
             showactive=False,
+            direction='right',
             x=0.05, y=-0.15, xanchor='left', yanchor='top',
             buttons=[
                 dict(label='▶ Play', method='animate',
@@ -218,11 +214,10 @@ def calendar_heatmap(df: pd.DataFrame) -> go.Figure:
         colorbar=dict(title='Races', tickfont=dict(color=COLORS['muted'])),
     ))
     fig.update_layout(
-        title='Activity calendar',
         height=260,
         yaxis=dict(tickmode='array', tickvals=list(range(7)), ticktext=_DAY_LABELS, autorange='reversed'),
         xaxis=dict(showticklabels=False, title=''),
-        margin=dict(l=50, r=20, t=50, b=20),
+        margin=dict(l=50, r=20, t=10, b=20),
     )
     return fig
 
@@ -241,8 +236,8 @@ def hour_polar(df: pd.DataFrame) -> go.Figure:
         hovertemplate='%{theta}h<br>%{r} races<extra></extra>',
     ))
     fig.update_layout(
-        title='Races by hour of day (UTC)',
         height=420,
+        margin=dict(t=10),
         polar=dict(
             bgcolor='rgba(0,0,0,0)',
             radialaxis=dict(showticklabels=True, color=COLORS['muted'], gridcolor=COLORS['border']),
@@ -283,11 +278,12 @@ def day_of_week_bar(df: pd.DataFrame) -> go.Figure:
         hovertemplate='%{x}<br>%{y:.1f} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title='Day of week',
         xaxis_title='', yaxis_title='Races',
         yaxis2=dict(title='Avg WPM', overlaying='y', side='right',
                     showgrid=False, color=COLORS['accent']),
         height=360,
+        margin=dict(t=10),
+        legend=dict(yanchor='top', y=0.99, xanchor='left', x=0.01),
     )
     return fig
 
@@ -307,9 +303,9 @@ def monthly_volume_bar(df: pd.DataFrame) -> go.Figure:
         hovertemplate='%{x|%b %Y}<br>%{y} races<br>Avg %{marker.color:.1f} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title='Monthly volume',
         xaxis_title='', yaxis_title='Races',
         height=360, showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
@@ -333,10 +329,10 @@ def hour_dow_heatmap(df: pd.DataFrame) -> go.Figure:
         hovertemplate='%{y} %{x}h<br>%{z:.1f} avg WPM<br>%{customdata:.0f} races<extra></extra>',
     ))
     fig.update_layout(
-        title='When you race fastest (avg WPM by hour × day)',
         xaxis_title='Hour (UTC)', yaxis_title='',
         yaxis=dict(autorange='reversed'),
         height=360,
+        margin=dict(t=10),
     )
     return fig
 
@@ -361,9 +357,10 @@ def place_distribution_by_size(df: pd.DataFrame) -> go.Figure:
             hovertemplate='%{x}<br>%{y} races<extra></extra>',
         ))
     fig.update_layout(
-        title='Placements by race size',
         xaxis_title='Place', yaxis_title='Races',
         height=380, barmode='group',
+        margin=dict(t=10),
+        legend=dict(orientation='h', yanchor='top', y=0.99, xanchor='left', x=0.01),
     )
     return fig
 
@@ -386,9 +383,10 @@ def accuracy_vs_wpm_scatter(df: pd.DataFrame) -> go.Figure:
         hovertemplate='%{x:.1f}% accuracy<br>%{y} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title=f'Accuracy vs WPM — correlation r = {corr:.2f}',
+        title=f'r = {corr:.2f}',
         xaxis_title='Accuracy (%)', yaxis_title='WPM',
         height=400,
+        margin=dict(t=30),
     )
     return fig
 
@@ -406,9 +404,9 @@ def points_cumulative(df: pd.DataFrame) -> go.Figure:
         hovertemplate='Race %{x}<br>%{y:,.0f} total points<extra></extra>',
     ))
     fig.update_layout(
-        title='Cumulative points',
         xaxis_title='Race #', yaxis_title='Points',
         height=360, showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
@@ -431,9 +429,9 @@ def mode_performance_bar(df: pd.DataFrame) -> go.Figure:
                       + grouped['races'].astype(str) + ' races<extra></extra>',
     ))
     fig.update_layout(
-        title='Performance by mode',
         xaxis_title='', yaxis_title='Avg WPM',
         height=360, showlegend=False,
+        margin=dict(t=10),
     )
     return fig
 
@@ -460,9 +458,9 @@ def text_repeat_analysis(df: pd.DataFrame, n: int = 10) -> go.Figure:
                       'Avg %{marker.color:.1f} WPM<extra></extra>',
     ))
     fig.update_layout(
-        title=f'Most-raced texts (top {n})',
         xaxis_title='Text ID', yaxis_title='Races',
         height=380,
+        margin=dict(t=10),
     )
     return fig
 
@@ -514,9 +512,10 @@ def win_rate_over_time(df: pd.DataFrame, window: int = 100) -> go.Figure:
         name='Win %',
     ))
     fig.update_layout(
-        title=f'Win & podium rate (rolling {window})',
         xaxis_title='Race #', yaxis_title='%',
         height=380,
+        margin=dict(t=10),
+        legend=dict(yanchor='top', y=0.99, xanchor='left', x=0.01),
     )
     return fig
 
