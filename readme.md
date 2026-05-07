@@ -1,45 +1,74 @@
 # Get User Stats for TypeRacer
 
-#### Are you a greedy piece of shit, and you dont want to pay 12$ annually for typeracer.... just like me? But you still wanna see your account statistics?
-Lucky for you, I have a solution to our problem. I have written a small script for deep parsing and analysis stats data from typeracer, and I d like to share it with you. All you need is installed python3 on your computer. 
+A CLI tool that fetches your TypeRacer race history and opens an interactive Streamlit dashboard with Plotly charts. When credentials are provided it uses TypeRacer's official export endpoint (full data); otherwise it falls back to HTML scraping (slightly narrower data — some charts gracefully degrade).
 
-Script can also plot some general information for you, if you wanna something unusual, you free to use csv file that will be created.
+---
 
+## Setup
 
--------------------------------
-## How to use?
-        
-        git clone https://github.com/kinfi4/typeracer-GetAllUserStatsForFree.git
-        cd typeracer-GetAllUserStatsForFree
-        pip install -r requirements.txt (you may also create isolated virtual env for that)
-        python get_stats.py -u <your username>
+```bash
+git clone https://github.com/kinfi4/typeracer-GetAllUserStatsForFree.git
+cd typeracer-GetAllUserStatsForFree
+pip install -r requirements.txt
+```
 
-### And thats it!
+### Authentication (optional but recommended)
 
----------------------------
-## Authentication (optional)
+```bash
+cp .env.example .env
+# edit .env — set TYPERACER_USERNAME and TYPERACER_PASSWORD
+```
 
-By default the script fetches public race data without logging in.
-To access a private profile or authenticate as yourself:
+Without credentials the script scrapes public HTML. With credentials it uses the official export endpoint, which provides extra fields (time of day, text ID, game mode, skill level) that unlock additional charts.
 
-1. Copy `.env.example` to `.env`
-2. Fill in your TypeRacer username and password
-3. Run the script as normal — it will log in automatically
+---
 
-        cp .env.example .env
-        # edit .env and set TYPERACER_USERNAME and TYPERACER_PASSWORD
+## Usage
 
----------------------------
-## Script arguments:
-        * -u (--username) - Username of the account to parse info about
-        * -f (--filename) - Filepath where to store the parsed info
-            OR file where script can gather info from, if --no-parsing specified
-        * -n (--no-parsing) - If it is set script wont parse user stats from typeracer,
-            it will use info from file instead. Thats why, if -n was set, you must 
-            specify -f (--filename) argument, so script knows where to get info from.
-            You may also dont specify -u (--username) argument if --no-parsing set.
-        * --hide-plots - Dont show any plots after parsing finished, cant be used together
-            with --no-parsing.
+```bash
+# Fetch stats and open the interactive report in the browser
+python get_stats.py -u <username>
 
+# With a date range (DD-MM-YYYY)
+python get_stats.py -u <username> --start-date "01-01-2024" --end-date "31-12-2024"
 
-@kinfi4
+# Save to a specific CSV file
+python get_stats.py -u <username> -f output.csv
+
+# Fetch without launching the report (headless / CI)
+python get_stats.py -u <username> --no-report
+
+# Open the report from an existing CSV (no network requests)
+python get_stats.py -n -f data/username-stats.csv
+```
+
+---
+
+## Report
+
+The dashboard opens at `http://localhost:8501` and includes:
+
+| Tab | Contents |
+|-----|----------|
+| 📊 Overview | KPI cards (races, avg/max/median WPM, win rate, accuracy), 90-day sparkline |
+| 🚀 Speed | WPM scatter + rolling avg, histogram, PB progression, monthly box plot, trend regression |
+| 📅 Activity | Calendar heatmap, day-of-week bar, monthly volume, hour-of-day polar, hour×day heatmap |
+| 🏆 Performance | Win/podium rate over time, placement distribution, accuracy vs WPM, cumulative points |
+| 💎 Records | Top-10 tables, WPM milestones, mode breakdown, most-raced texts |
+| 🎬 Animations | Animated monthly WPM distribution histogram |
+| 🔍 Explorer | Filterable data table + CSV download |
+
+The sidebar offers date presets (7d / 30d / 90d / YTD / 1y / all / custom), WPM range, accuracy range, race-size multi-select, and mode filter. All charts update live as you adjust filters.
+
+---
+
+## Arguments
+
+| Flag | Description |
+|------|-------------|
+| `-u` / `--username` | TypeRacer username to fetch |
+| `-f` / `--filename` | CSV path to save to (default: `data/<username>-stats.csv`) or load from (with `-n`) |
+| `-n` / `--no-parsing` | Skip fetching — open report from an existing CSV (`-f` required) |
+| `--start-date` | Earliest date to include, `DD-MM-YYYY` |
+| `--end-date` | Latest date to include, `DD-MM-YYYY` |
+| `--no-report` | Save CSV only, do not launch Streamlit |

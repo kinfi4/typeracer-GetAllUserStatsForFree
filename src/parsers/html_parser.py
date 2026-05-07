@@ -1,6 +1,7 @@
 from datetime import date
 from typing import List
 
+import pandas as pd
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
@@ -22,6 +23,11 @@ class HtmlParser:
                 'points': row.find('div', {'class': 'profileTableHeaderAvg'}).get_text(strip=True),
                 'place': row.find('div', {'class': 'profileTableHeaderPoints'}).get_text(strip=True),
                 'date': self._parse_date(date_str),
+                'datetime': pd.NA,
+                'mode': pd.NA,
+                'text_id': pd.NA,
+                'skill_level': pd.NA,
+                'universe': pd.NA,
             })
 
         return rows

@@ -1,7 +1,7 @@
 import argparse
 from datetime import datetime
 
-from src.actions import parse, plot_stats_from_file
+from src.actions import parse, show_report_from_file
 
 
 if __name__ == '__main__':
@@ -9,9 +9,9 @@ if __name__ == '__main__':
     arg_parser.add_argument('-n', '--no-parsing', help='Dont parse user stats from typeracer, use info from file instead', action='store_true')
     arg_parser.add_argument('-u', '--username', help='Username of the account to parse info about')
     arg_parser.add_argument('-f', '--filename', help='Filepath where to store the parsed info, OR file where script can gather info from, if --no-parsing specified')
-    arg_parser.add_argument('--start-date', help='Date in format: %d-%m-%Y, fetched results will start from that date (inclusive). Example: --start-date "24-07-2022"')
-    arg_parser.add_argument('--end-date', help='Date in format: %d-%m-%Y, fetched results will be before specified date (exclusive). Example: --start-date "24-07-2022"')
-    arg_parser.add_argument('--hide-plots', help='Dont show any plots', action='store_true')
+    arg_parser.add_argument('--start-date', help='Date in format: %%d-%%m-%%Y, fetched results will start from that date (inclusive). Example: --start-date "24-07-2022"')
+    arg_parser.add_argument('--end-date', help='Date in format: %%d-%%m-%%Y, fetched results will be before specified date (exclusive). Example: --end-date "24-07-2022"')
+    arg_parser.add_argument('--no-report', help='Fetch and save CSV without launching the Streamlit report', action='store_true')
 
     args = arg_parser.parse_args()
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
             print('You have to specify the filepath from which I have to get statistics')
             exit(code=1)
 
-        plot_stats_from_file(args.filename, start_date_arg, end_date_arg)
+        show_report_from_file(args.filename)
     else:
         if not args.username:
             print('You have to specify the username of the account you wanna parse info about')
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         parse(
             username=args.username,
             output_file=filename,
-            show_plots=not args.hide_plots,
+            show_report=not args.no_report,
             start_date=start_date_arg,
-            end_date=end_date_arg
+            end_date=end_date_arg,
         )
